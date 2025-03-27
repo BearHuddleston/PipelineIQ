@@ -30,22 +30,21 @@ This project shows how to serve a built React app from a Go server, providing bo
 
 ```
 project-root/
-├── main.go              # Go server entry point
-├── go.mod               # Go module definition
-├── go.sum               # Go module dependencies
+├── main.go                    # Go server entry point
+├── go.mod                     # Go module definition
+├── go.sum                     # Go module dependencies
 ├── web/
 │   └── frontend/
-│       ├── dist/        # Output of npm run build (Parcel)
-│       ├── src/         # Source code for the React/TypeScript app
+│       ├── dist/              # Output of npm run build (Parcel)
+│       ├── src/               # Source code for the React/TypeScript app
 │       │   ├── index.html
 │       │   ├── index.tsx
 │       │   └── App.tsx
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── .parcel-cache/
-├── data.db              # SQLite database (auto-created on first run)
-├── README.md            # This file
-└── ...
+├── data.db                    # SQLite database (auto-created on first run)
+└── README.md                  # This file
 ```
 
 -   **`main.go`** contains the Gin server, routes, and logic for data fetching, processing, and LLM stubs.
