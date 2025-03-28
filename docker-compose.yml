@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13-alpine
+    container_name: pipelineiq-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pipelineiq
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - pipelineiq-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: pipelineiq-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/pipelineiq?sslmode=disable
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - API_URL_1=${API_URL_1}
+      - API_URL_2=${API_URL_2}
+      - PORT=8080
+    ports:
+      - "8080:8080"
+    networks:
+      - pipelineiq-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: pipelineiq-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - pipelineiq-network
+
+networks:
+  pipelineiq-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
