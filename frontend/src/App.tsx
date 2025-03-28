@@ -9,6 +9,7 @@ import { checkHealth } from './services/api';
 function App() {
   const [serverStatus, setServerStatus] = useState<'connecting' | 'online' | 'offline'>('connecting');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [lastProcessedId, setLastProcessedId] = useState<number | undefined>(undefined);
 
   // Check server health on component mount
   useEffect(() => {
@@ -28,9 +29,11 @@ function App() {
     checkServer();
   }, [refreshTrigger]);
 
-  const handleDataProcessSuccess = () => {
+  const handleDataProcessSuccess = (processedId: number) => {
     // Force refresh of both results and analysis containers
     setRefreshTrigger(prev => prev + 1);
+    // Store the processed ID for streaming
+    setLastProcessedId(processedId);
   };
 
   return (
@@ -60,8 +63,9 @@ function App() {
               </div>
               <div className="col-span-1">
                 <StreamingAnalysisDisplay 
-                  key={`streaming-analysis-${refreshTrigger}`}
-                  onComplete={() => setRefreshTrigger(prev => prev + 1)} 
+                  // Pass the most recent processedId when available
+                  processedId={lastProcessedId}
+                  onComplete={() => {/* Don't trigger refresh here to avoid infinite loops */}} 
                 />
               </div>
             </div>

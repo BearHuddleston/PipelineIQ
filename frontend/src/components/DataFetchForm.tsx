@@ -3,7 +3,7 @@ import { fetchAndProcessData } from '../services/api';
 import LoadingSpinner from './LoadingSpinner';
 
 interface DataFetchFormProps {
-  onSuccess: () => void;
+  onSuccess: (processedId: number) => void;
 }
 
 const DataFetchForm = ({ onSuccess }: DataFetchFormProps) => {
@@ -20,7 +20,7 @@ const DataFetchForm = ({ onSuccess }: DataFetchFormProps) => {
     try {
       const response = await fetchAndProcessData();
       setSuccessMessage(`Data pipeline completed. Processed ID: ${response.processed_id}, Analysis ID: ${response.analysis_id}`);
-      onSuccess();
+      onSuccess(response.processed_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch and process data');
     } finally {

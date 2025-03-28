@@ -11,6 +11,7 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
   const [startTime, setStartTime] = useState<Date | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
+  const lastProcessedIdRef = useRef<number | undefined>(undefined);
 
   const startStreaming = () => {
     // Reset state
@@ -48,6 +49,17 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
     // Store the cleanup function
     cleanupRef.current = cleanup;
   };
+
+  // Auto-start streaming when processedId changes
+  useEffect(() => {
+    if (processedId && processedId !== lastProcessedIdRef.current && !isStreaming) {
+      lastProcessedIdRef.current = processedId;
+      // Start streaming with a slight delay to ensure backend processing has begun
+      setTimeout(() => {
+        startStreaming();
+      }, 500);
+    }
+  }, [processedId, isStreaming]);
 
   // Cleanup on unmount
   useEffect(() => {
