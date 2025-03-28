@@ -30,7 +30,7 @@ func main() {
 	sugar.Info("Connected to database")
 
 	// Setup and start the HTTP server
-	router := api.SetupRouter()
+	router := api.SetupRouter(db, sugar, cfg)
 	serverAddr := fmt.Sprintf(":%d", cfg.Port)
 	sugar.Infof("Starting server at %s", serverAddr)
 	if err := router.Run(serverAddr); err != nil {
