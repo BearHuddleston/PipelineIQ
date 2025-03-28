@@ -76,18 +76,22 @@ func (s *DataIngestionService) FetchData() error {
 
 	// Process the results
 	for result := range resultCh {
+		var content string
 		if result.Error != nil {
 			s.Logger.Errorw("Error fetching data from source",
 				"source", result.SourceName,
 				"error", result.Error,
 			)
-			continue
+			// Use a placeholder empty JSON object for failed requests
+			content = `{"status":"error","error":"` + result.Error.Error() + `"}`
+		} else {
+			content = result.Content
 		}
 
 		// Store in database
 		rawData := models.RawData{
 			SourceName: result.SourceName,
-			Content:    result.Content,
+			Content:    content,
 			FetchedAt:  time.Now(),
 		}
 
