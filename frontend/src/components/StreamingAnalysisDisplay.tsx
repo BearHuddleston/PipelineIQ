@@ -3,6 +3,8 @@ import { streamAnalysis } from '../services/api';
 import { StreamingAnalysisProps } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysisProps) => {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -70,48 +72,7 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
     };
   }, []);
 
-  // Format the content with Markdown-like rendering
-  const formatContent = (text: string) => {
-    if (!text) return null;
-    
-    // Split by new lines
-    const lines = text.split('\n');
-    return lines.map((line, index) => {
-      // Handle lists
-      if (line.match(/^\d+\./)) {
-        return (
-          <li key={index} className="ml-5 list-decimal">
-            {line.replace(/^\d+\.\s*/, '')}
-          </li>
-        );
-      }
-      // Handle bullet points
-      if (line.match(/^\*\s/)) {
-        return (
-          <li key={index} className="ml-5 list-disc">
-            {line.replace(/^\*\s*/, '')}
-          </li>
-        );
-      }
-      // Handle headers
-      if (line.match(/^#+\s/)) {
-        const level = line.match(/^(#+)\s/)?.[1].length || 1;
-        const headerText = line.replace(/^#+\s*/, '');
-        const sizes = ['text-2xl', 'text-xl', 'text-lg', 'text-base'];
-        const sizeClass = sizes[Math.min(level - 1, sizes.length - 1)];
-        return (
-          <div key={index} className={`${sizeClass} font-bold mt-2 mb-1`}>
-            {headerText}
-          </div>
-        );
-      }
-      // Handle paragraphs with spacing
-      if (line.trim() === '') {
-        return <div key={index} className="h-4"></div>;
-      }
-      return <p key={index} className="mb-2">{line}</p>;
-    });
-  };
+  // Now using ReactMarkdown for rendering instead of custom formatting
 
   return (
     <div className="mt-6">
@@ -163,8 +124,15 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
             </div>
           )}
           
-          <div className="code-block h-full" style={{ whiteSpace: 'pre-wrap' }}>
-            {formatContent(content) || (
+          <div className="markdown-content h-full p-4 overflow-auto">
+            {content ? (
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                className="prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3 prose-li:my-1"
+              >
+                {content}
+              </ReactMarkdown>
+            ) : (
               <div className="text-gray-400 italic">
                 Click "Generate Analysis" to create an analysis of the processed data, or "Fetch & Process Data" to trigger automatic analysis.
               </div>

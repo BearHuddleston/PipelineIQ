@@ -238,7 +238,7 @@ func (s *LLMService) StreamLLMAnalysis(w http.ResponseWriter, processedDataID ui
 			return
 		}
 
-		// Prepare the prompt for the LLM
+		// Prepare the prompt for the LLM with Markdown formatting guidance
 		prompt := fmt.Sprintf(`Analyze the following JSON data and provide insights:
 
 %s
@@ -249,10 +249,18 @@ The data structure includes:
 - derived_metrics: Calculated metrics based on combined data
 - data_sources: List of data sources
 
-Please provide:
-1. A summary of the key metrics from each data source
-2. Notable trends or patterns if any are apparent
-3. Potential actions or recommendations based on the data
+Please provide a detailed analysis with the following sections, using Markdown formatting:
+
+## Summary of Key Metrics
+Summarize the key metrics from each data source with bullet points or paragraphs.
+
+## Trends and Patterns
+Analyze any notable trends or patterns in the data.
+
+## Recommendations
+Provide actionable recommendations based on the data analysis.
+
+IMPORTANT: Format your response using Markdown with proper headings, lists, and emphasis to highlight important points. Use tables if appropriate for data comparison.
 `, processedData.Content)
 
 		// Send starting message
