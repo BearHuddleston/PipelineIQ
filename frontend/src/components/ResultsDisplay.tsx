@@ -40,7 +40,7 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
               </div>
               <div className="mb-2">
                 <span className="font-semibold">Content:</span>
-                <pre className="mt-2 bg-gray-100 p-2 rounded overflow-auto">
+                <pre className="mt-2 bg-gray-100 p-2 rounded overflow-auto text-left">
                   {JSON.stringify(parsedContent, null, 2)}
                 </pre>
               </div>

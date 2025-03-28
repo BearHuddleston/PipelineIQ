@@ -70,7 +70,7 @@ func (s *LLMService) GenerateInsights() (*models.LLMAnalysis, error) {
 	}
 
 	// Prepare the prompt for the LLM
-	prompt := fmt.Sprintf("""Analyze the following data and provide insights:
+	prompt := fmt.Sprintf(`Analyze the following data and provide insights:
 
 %s
 
@@ -78,7 +78,7 @@ Please provide:
 1. A summary of the key metrics
 2. Notable trends or patterns
 3. Potential actions or recommendations based on the data
-""", processedData.Content)
+`, processedData.Content)
 
 	// Query the LLM API
 	insights, err := s.queryLLM(prompt)
