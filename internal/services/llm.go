@@ -70,13 +70,19 @@ func (s *LLMService) GenerateInsights() (*models.LLMAnalysis, error) {
 	}
 
 	// Prepare the prompt for the LLM
-	prompt := fmt.Sprintf(`Analyze the following data and provide insights:
+	prompt := fmt.Sprintf(`Analyze the following JSON data and provide insights:
 
 %s
 
+The data structure includes:
+- timestamp: When the data was processed
+- combined_metrics: All metrics from different data sources with source name as prefix
+- derived_metrics: Calculated metrics based on combined data
+- data_sources: List of data sources
+
 Please provide:
-1. A summary of the key metrics
-2. Notable trends or patterns
+1. A summary of the key metrics from each data source
+2. Notable trends or patterns if any are apparent
 3. Potential actions or recommendations based on the data
 `, processedData.Content)
 

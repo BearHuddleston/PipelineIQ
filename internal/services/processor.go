@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
+	
 	"github.com/arkouda/PipelineIQ/internal/models"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -26,8 +26,9 @@ func NewDataProcessorService(db *gorm.DB, logger *zap.SugaredLogger) *DataProces
 
 // Generic data structure to hold API data
 type APIData struct {
-	Timestamp time.Time              `json:"timestamp"`
-	Metrics   map[string]interface{} `json:"metrics"`
+	Timestamp time.Time              `json:"timestamp,omitempty"`
+	Metrics   map[string]interface{} `json:"metrics,omitempty"`
+	Data      map[string]interface{} `json:"data,omitempty"`
 }
 
 // ProcessedResult represents the combined and transformed data
@@ -92,9 +93,9 @@ func (s *DataProcessorService) combineAndTransform(rawDataEntries []models.RawDa
 
 	// Process each raw data entry
 	for _, entry := range rawDataEntries {
-		// Parse the JSON content
-		var apiData APIData
-		if err := json.Unmarshal([]byte(entry.Content), &apiData); err != nil {
+		// Parse the JSON content as a generic map first to handle different API structures
+		var rawJSON map[string]interface{}
+		if err := json.Unmarshal([]byte(entry.Content), &rawJSON); err != nil {
 			s.Logger.Warnw("Failed to parse raw data JSON", "error", err, "source", entry.SourceName)
 			continue
 		}
@@ -102,9 +103,14 @@ func (s *DataProcessorService) combineAndTransform(rawDataEntries []models.RawDa
 		// Add source to the list
 		result.DataSources = append(result.DataSources, entry.SourceName)
 
-		// Merge metrics from this source
-		// Using source name as prefix to avoid key collisions
-		for key, value := range apiData.Metrics {
+		// Process the JSON data based on its structure
+		flattenedData := make(map[string]interface{})
+		
+		// Flatten the JSON structure for easier processing
+		flattenJSON("", rawJSON, flattenedData)
+		
+		// Add all flattened data to combined metrics
+		for key, value := range flattenedData {
 			result.CombinedMetrics[fmt.Sprintf("%s_%s", entry.SourceName, key)] = value
 		}
 	}
@@ -121,4 +127,34 @@ func (s *DataProcessorService) combineAndTransform(rawDataEntries []models.RawDa
 	}
 
 	return result, nil
+}
+
+// flattenJSON recursively flattens a nested JSON structure into a single-level map
+// with keys representing the path to each value
+func flattenJSON(prefix string, data map[string]interface{}, result map[string]interface{}) {
+	for k, v := range data {
+		key := k
+		if prefix != "" {
+			key = prefix + "_" + k
+		}
+
+		switch val := v.(type) {
+		case map[string]interface{}:
+			// Recursively flatten nested maps
+			flattenJSON(key, val, result)
+		case []interface{}:
+			// For arrays, store a count and process each item with index
+			result[key+"_count"] = len(val)
+			for i, item := range val {
+				if mapItem, ok := item.(map[string]interface{}); ok {
+					flattenJSON(fmt.Sprintf("%s_%d", key, i), mapItem, result)
+				} else {
+					result[fmt.Sprintf("%s_%d", key, i)] = item
+				}
+			}
+		default:
+			// Store primitive values directly
+			result[key] = val
+		}
+	}
 }
