@@ -7,27 +7,35 @@ import StreamingAnalysisDisplay from './components/StreamingAnalysisDisplay';
 import { checkHealth } from './services/api';
 
 function App() {
-  const [serverStatus, setServerStatus] = useState<'connecting' | 'online' | 'offline'>('connecting');
+  const [serverStatus, setServerStatus] = useState<'connecting' | 'online' | 'offline' | 'checking'>('connecting');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [lastProcessedId, setLastProcessedId] = useState<number | undefined>(undefined);
 
-  // Check server health on component mount
+  // Check server health periodically
   useEffect(() => {
     const checkServer = async () => {
+      // Only show checking status if we're not in the initial connecting state
+      if (serverStatus !== 'connecting') {
+        setServerStatus('checking');
+      }
+      
       try {
         await checkHealth();
         setServerStatus('online');
       } catch (error) {
         setServerStatus('offline');
-        // Retry after 5 seconds
-        setTimeout(() => {
-          setRefreshTrigger(prev => prev + 1);
-        }, 5000);
       }
     };
 
+    // Check immediately on mount
     checkServer();
-  }, [refreshTrigger]);
+    
+    // Set up interval for periodic checks (every 10 seconds)
+    const intervalId = setInterval(checkServer, 10000);
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleDataProcessSuccess = (processedId: number) => {
     // Force refresh of both results and analysis containers
@@ -43,9 +51,15 @@ function App() {
         <div className="mt-2 text-gray-600">
           Server Status: 
           {serverStatus === 'connecting' && <span className="ml-2 text-yellow-500">Connecting...</span>}
+          {serverStatus === 'checking' && <span className="ml-2 text-blue-500">Checking...</span>}
           {serverStatus === 'online' && <span className="ml-2 text-green-500">Online</span>}
-          {serverStatus === 'offline' && <span className="ml-2 text-red-500">Offline - Retrying...</span>}
+          {serverStatus === 'offline' && <span className="ml-2 text-red-500">Offline</span>}
         </div>
+        {serverStatus === 'offline' && (
+          <div className="mt-1 text-sm text-gray-500">
+            Server connection lost. Attempting to reconnect every 10 seconds.
+          </div>
+        )}
       </header>
 
       <main>
