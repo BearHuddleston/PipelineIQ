@@ -1,6 +1,0 @@
-*.db
-node_modules
-package-lock.json
-.parcel-cache
-web/frontend/dist
-.env
