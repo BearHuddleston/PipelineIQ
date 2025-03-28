@@ -19,7 +19,7 @@ const DataFetchForm = ({ onSuccess }: DataFetchFormProps) => {
 
     try {
       const response = await fetchAndProcessData();
-      setSuccessMessage(`Data pipeline completed. Processed ID: ${response.processed_id}, Analysis ID: ${response.analysis_id}`);
+      setSuccessMessage(`Data pipeline initiated. Processed ID: ${response.processed_id}. Analysis will be generated in the background.`);
       onSuccess(response.processed_id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch and process data');

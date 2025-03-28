@@ -21,7 +21,7 @@ type Handler struct {
 	LLMSvc       *services.LLMService
 }
 
-// FetchAndProcessHandler handles the request to fetch data, process it, and generate insights
+// FetchAndProcessHandler handles the request to fetch data, process it, and generate insights asynchronously
 func (h *Handler) FetchAndProcessHandler(c *gin.Context) {
 	h.Logger.Info("Handling fetch and process request")
 
@@ -44,21 +44,21 @@ func (h *Handler) FetchAndProcessHandler(c *gin.Context) {
 		return
 	}
 
-	// Generate insights using LLM
-	llmAnalysis, err := h.LLMSvc.GenerateInsights()
-	if err != nil {
-		h.Logger.Errorw("Error generating insights", "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to generate insights: " + err.Error(),
-		})
-		return
-	}
+	// Generate insights using LLM asynchronously
+	go func() {
+		llmAnalysis, err := h.LLMSvc.GenerateInsights()
+		if err != nil {
+			h.Logger.Errorw("Error generating insights in background", "error", err)
+			return
+		}
+		h.Logger.Infow("Background LLM analysis completed", "analysis_id", llmAnalysis.ID)
+	}()
 
-	// Return success response
+	// Return success response immediately after processing
 	c.JSON(http.StatusOK, gin.H{
-		"message":       "Data pipeline completed successfully",
+		"message":       "Data pipeline initiated successfully",
 		"processed_id":  processedData.ID,
-		"analysis_id":   llmAnalysis.ID,
+		"analysis_id":   0, // Will be generated asynchronously
 		"completed_at":  time.Now(),
 	})
 }
