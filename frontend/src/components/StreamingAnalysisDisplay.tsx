@@ -126,12 +126,11 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
           
           <div className="markdown-content h-full p-4 overflow-auto">
             {content ? (
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm]}
-                className="prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3 prose-li:my-1"
-              >
-                {content}
-              </ReactMarkdown>
+              <div className="prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3 prose-li:my-1">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {content}
+                </ReactMarkdown>
+              </div>
             ) : (
               <div className="text-gray-400 italic">
                 Click "Generate Analysis" to create an analysis of the processed data, or "Fetch & Process Data" to trigger automatic analysis.
