@@ -22,8 +22,9 @@ type DataIngestionService struct {
 
 // Config contains the required configuration for the ingestion service
 type Config struct {
-	APIURL1 string
-	APIURL2 string
+	APIURL1        string
+	APIURL2        string
+	WeatherAPIKey  string
 }
 
 // FetchResult represents the result of a fetch operation
@@ -60,12 +61,16 @@ func (s *DataIngestionService) FetchData() error {
 		resultCh <- FetchResult{SourceName: "API1", Content: content, Error: err}
 	}()
 
-	// Source 2
+	// Source 2 - Weather API
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		content, err := s.fetchFromAPI(s.Config.APIURL2)
-		resultCh <- FetchResult{SourceName: "API2", Content: content, Error: err}
+		// Default to Austin if no city is specified
+		city := "Austin"
+		// Format the Weather API URL with the API key
+		weatherURL := fmt.Sprintf("%s?q=%s&key=%s", s.Config.APIURL2, city, s.Config.WeatherAPIKey)
+		content, err := s.fetchFromAPI(weatherURL)
+		resultCh <- FetchResult{SourceName: "WeatherAPI", Content: content, Error: err}
 	}()
 
 	// Close the channel when all goroutines are done
