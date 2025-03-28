@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# Binary files
+/bin
+/app
+
+# IDE files
+.idea/
+.vscode/
+
+# Dependencies
+/vendor/
+
+# Frontend build files
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.cache/
+
+# Logs
+*.log
