@@ -1,17 +1,29 @@
 import { LoadingSpinnerProps } from '../types';
 
-const LoadingSpinner = ({ size = 'medium' }: LoadingSpinnerProps) => {
+const LoadingSpinner = ({ size = 'medium', showText = true }: LoadingSpinnerProps) => {
   // Determine size class based on prop
-  const sizeClass = {
-    small: 'w-4 h-4',
-    medium: 'w-8 h-8',
-    large: 'w-12 h-12',
-  }[size];
+  let textSize: string;
+  
+  switch(size) {
+    case 'small':
+      textSize = 'text-xs';
+      break;
+    case 'large':
+      textSize = 'text-base';
+      break;
+    default: // medium
+      textSize = 'text-sm';
+  }
 
   return (
     <div className="flex justify-center items-center">
-      <div className={`animate-spin rounded-full border-t-2 border-b-2 border-blue-500 ${sizeClass}`}></div>
-      <span className="ml-2">Loading...</span>
+      <div className="loader">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      {showText && <span className={`ml-2 ${textSize}`}>Loading...</span>}
     </div>
   );
 };

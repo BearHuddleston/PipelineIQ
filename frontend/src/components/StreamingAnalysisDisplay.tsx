@@ -115,39 +115,61 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
 
   return (
     <div className="mt-6">
-      <h2 className="text-xl font-bold mb-4">LLM Analysis (Streaming)</h2>
-      
-      <div className="mb-4 flex justify-between items-center">
-        <div>
-          {isStreaming && startTime && (
-            <div className="text-sm text-gray-500">
-              Streaming for {Math.floor((new Date().getTime() - startTime.getTime()) / 1000)}s
-            </div>
-          )}
+      <div className="card">
+        <div className="card-header">
+          <h2>LLM Analysis</h2>
+          <div className="flex items-center">
+            {isStreaming && startTime && (
+              <div className="text-sm text-gray-500 mr-4">
+                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></span>
+                Streaming for {Math.floor((new Date().getTime() - startTime.getTime()) / 1000)}s
+              </div>
+            )}
+            <button
+              onClick={startStreaming}
+              disabled={isStreaming}
+              className="btn btn-primary btn-sm"
+            >
+              {isStreaming ? (
+                <>
+                  <LoadingSpinner size="small" showText={false} />
+                  <span className="ml-2">Generating...</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  Generate Analysis
+                </>
+              )}
+            </button>
+          </div>
         </div>
-        <button
-          onClick={startStreaming}
-          disabled={isStreaming}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          {isStreaming ? <LoadingSpinner size="small" /> : 'Generate Analysis'}
-        </button>
-      </div>
-      
-      {error && <ErrorMessage message={error} />}
-      
-      <div 
-        ref={containerRef}
-        className="p-4 border rounded bg-white shadow-sm h-[600px] overflow-y-auto"
-      >
-        {isStreaming && !content && (
-          <div className="flex justify-center items-center h-24">
-            <LoadingSpinner />
+        
+        {error && (
+          <div className="p-4 border-t border-gray-100">
+            <ErrorMessage message={error} />
           </div>
         )}
         
-        <div className="prose prose-sm max-w-none bg-gray-50 p-4 rounded font-mono text-sm">
-          {formatContent(content)}
+        <div 
+          ref={containerRef}
+          className="data-panel border-0 rounded-t-none"
+        >
+          {isStreaming && !content && (
+            <div className="flex justify-center items-center h-24">
+              <LoadingSpinner size="medium" />
+            </div>
+          )}
+          
+          <div className="code-block h-full" style={{ whiteSpace: 'pre-wrap' }}>
+            {formatContent(content) || (
+              <div className="text-gray-400 italic">
+                Click "Generate Analysis" to create an analysis of the processed data, or "Fetch & Process Data" to trigger automatic analysis.
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

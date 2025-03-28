@@ -45,15 +45,19 @@ function App() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold">PipelineIQ Dashboard</h1>
-        <div className="mt-2 text-gray-600">
-          Server Status: 
-          {serverStatus === 'connecting' && <span className="ml-2 text-yellow-500">Connecting...</span>}
-          {serverStatus === 'checking' && <span className="ml-2 text-blue-500">Checking...</span>}
-          {serverStatus === 'online' && <span className="ml-2 text-green-500">Online</span>}
-          {serverStatus === 'offline' && <span className="ml-2 text-red-500">Offline</span>}
+    <div className="app-container">
+      <header className="app-header">
+        <div className="flex justify-between items-center">
+          <div className="app-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="app-logo">
+              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+            </svg>
+            <h1 className="text-3xl font-bold">PipelineIQ</h1>
+          </div>
+          <div className={`status-indicator status-${serverStatus}`}>
+            <div className="status-dot"></div>
+            <span className="capitalize">{serverStatus}</span>
+          </div>
         </div>
         {serverStatus === 'offline' && (
           <div className="mt-1 text-sm text-gray-500">
@@ -64,20 +68,26 @@ function App() {
 
       <main>
         {serverStatus === 'offline' ? (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <strong className="font-bold">Server Unavailable: </strong>
-            <span className="block sm:inline">Cannot connect to the backend server. Please check if it's running.</span>
+          <div className="alert alert-danger" role="alert">
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <strong>Server Unavailable</strong>
+                <p className="text-sm">Cannot connect to the backend server. Please check if it's running.</p>
+              </div>
+            </div>
           </div>
         ) : (
           <>
             <DataFetchForm onSuccess={handleDataProcessSuccess} />
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="col-span-1">
+            <div className="grid-container">
+              <div>
                 <ResultsContainer key={`results-${refreshTrigger}`} />
               </div>
-              <div className="col-span-1">
+              <div>
                 <StreamingAnalysisDisplay 
-                  // Pass the most recent processedId when available
                   processedId={lastProcessedId}
                   onComplete={() => {/* Don't trigger refresh here to avoid infinite loops */}} 
                 />
@@ -87,7 +97,7 @@ function App() {
         )}
       </main>
 
-      <footer className="mt-12 pt-4 border-t text-center text-gray-500 text-sm">
+      <footer className="app-footer">
         &copy; {new Date().getFullYear()} PipelineIQ - A Data Processing Platform
       </footer>
     </div>

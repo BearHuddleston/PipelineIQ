@@ -47,6 +47,7 @@ export interface AnalysisResponse {
 // Component Props
 export interface LoadingSpinnerProps {
   size?: 'small' | 'medium' | 'large';
+  showText?: boolean;
 }
 
 export interface ErrorMessageProps {
