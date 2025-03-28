@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/arkouda/PipelineIQ/internal/models"
@@ -141,4 +142,38 @@ func (h *Handler) GetAnalysisHandler(c *gin.Context) {
 		"analysis":     llmAnalysis,
 		"generated_at": llmAnalysis.GeneratedAt,
 	})
+}
+
+// StreamAnalysisHandler streams LLM-generated insights using Server-Sent Events
+func (h *Handler) StreamAnalysisHandler(c *gin.Context) {
+	h.Logger.Info("Handling stream analysis request")
+
+	// Optional processed data ID parameter
+	processedID := c.Query("processed_id")
+	var processedDataID uint = 0
+	
+	if processedID != "" {
+		if id, err := strconv.ParseUint(processedID, 10, 32); err == nil {
+			processedDataID = uint(id)
+		} else {
+			h.Logger.Errorw("Invalid processed_id parameter", "error", err)
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid processed_id parameter",
+			})
+			return
+		}
+	}
+
+	// Since we're handling a long-running process with SSE, 
+	// we need to disable Gin middleware timeouts and buffering
+	c.Writer.Header().Set("Content-Type", "text/event-stream")
+	c.Writer.Header().Set("Cache-Control", "no-cache")
+	c.Writer.Header().Set("Connection", "keep-alive")
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	
+	// Important to disable buffering for SSE
+	c.Writer.Flush()
+
+	// Stream the LLM analysis
+	h.LLMSvc.StreamLLMAnalysis(c.Writer, processedDataID)
 }

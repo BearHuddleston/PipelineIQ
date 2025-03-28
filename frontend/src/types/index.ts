@@ -64,3 +64,15 @@ export interface AnalysisDisplayProps {
   loading: boolean;
   error: string | null;
 }
+
+export interface StreamingEventCallbacks {
+  onStart?: (message: string) => void;
+  onContent?: (content: string) => void;
+  onError?: (error: string) => void;
+  onComplete?: (data: { id: number; message: string }) => void;
+}
+
+export interface StreamingAnalysisProps {
+  processedId?: number;
+  onComplete?: (analysisId: number) => void;
+}

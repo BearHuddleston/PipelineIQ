@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import DataFetchForm from './components/DataFetchForm';
 import { ResultsContainer } from './components/ResultsDisplay';
-import { AnalysisContainer } from './components/AnalysisDisplay';
+// import { AnalysisContainer } from './components/AnalysisDisplay';
+import StreamingAnalysisDisplay from './components/StreamingAnalysisDisplay';
 import { checkHealth } from './services/api';
 
 function App() {
@@ -58,7 +59,10 @@ function App() {
                 <ResultsContainer key={`results-${refreshTrigger}`} />
               </div>
               <div className="col-span-1">
-                <AnalysisContainer key={`analysis-${refreshTrigger}`} />
+                <StreamingAnalysisDisplay 
+                  key={`streaming-analysis-${refreshTrigger}`}
+                  onComplete={() => setRefreshTrigger(prev => prev + 1)} 
+                />
               </div>
             </div>
           </>

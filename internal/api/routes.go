@@ -44,6 +44,7 @@ func SetupRouter(db *gorm.DB, logger *zap.SugaredLogger, cfg *config.Config) *gi
 	r.POST("/fetch_and_process", handler.FetchAndProcessHandler)
 	r.GET("/results", handler.GetResultsHandler)
 	r.GET("/analysis", handler.GetAnalysisHandler)
+	r.GET("/stream_analysis", handler.StreamAnalysisHandler)
 
 	return r
 }
