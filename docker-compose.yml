@@ -37,15 +37,16 @@ services:
       - pipelineiq-network
 
   frontend:
-    build:
-      context: .
-      dockerfile: frontend.Dockerfile
+    image: nginx:alpine
     container_name: pipelineiq-frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "80:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
     networks:
       - pipelineiq-network
 

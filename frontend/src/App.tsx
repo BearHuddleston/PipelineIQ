@@ -33,7 +33,7 @@ function App() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <header className="mb-8">
         <h1 className="text-3xl font-bold">PipelineIQ Dashboard</h1>
         <div className="mt-2 text-gray-600">
@@ -53,9 +53,13 @@ function App() {
         ) : (
           <>
             <DataFetchForm onSuccess={handleDataProcessSuccess} />
-            <div className="mt-8 grid grid-cols-1 gap-8">
-              <ResultsContainer key={`results-${refreshTrigger}`} />
-              <AnalysisContainer key={`analysis-${refreshTrigger}`} />
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="col-span-1">
+                <ResultsContainer key={`results-${refreshTrigger}`} />
+              </div>
+              <div className="col-span-1">
+                <AnalysisContainer key={`analysis-${refreshTrigger}`} />
+              </div>
             </div>
           </>
         )}

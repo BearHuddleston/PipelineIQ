@@ -20,7 +20,7 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
   return (
     <div className="mt-6">
       <h2 className="text-xl font-bold mb-4">Processed Results</h2>
-      <div className="overflow-auto">
+      <div className="overflow-auto h-[600px]">
         {data.map((item) => {
           // Parse the JSON content for display
           let parsedContent;
@@ -31,7 +31,7 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
           }
 
           return (
-            <div key={item.ID} className="mb-4 p-4 border rounded">
+            <div key={item.ID} className="mb-4 p-4 border rounded bg-white shadow-sm">
               <div className="mb-2">
                 <span className="font-semibold">ID:</span> {item.ID}
               </div>
@@ -40,7 +40,7 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
               </div>
               <div className="mb-2">
                 <span className="font-semibold">Content:</span>
-                <pre className="mt-2 bg-gray-100 p-2 rounded overflow-auto text-left">
+                <pre className="mt-2 bg-gray-50 p-2 rounded overflow-auto text-left text-xs font-mono max-h-[400px]">
                   {JSON.stringify(parsedContent, null, 2)}
                 </pre>
               </div>

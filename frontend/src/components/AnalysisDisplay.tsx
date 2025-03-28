@@ -61,7 +61,7 @@ const AnalysisDisplay = ({ data, loading, error }: AnalysisDisplayProps) => {
   return (
     <div className="mt-6">
       <h2 className="text-xl font-bold mb-4">LLM Analysis</h2>
-      <div className="p-4 border rounded bg-white shadow-sm">
+      <div className="p-4 border rounded bg-white shadow-sm h-[600px] overflow-y-auto">
         <div className="mb-2">
           <span className="font-semibold">ID:</span> {data.ID}
         </div>
@@ -70,7 +70,7 @@ const AnalysisDisplay = ({ data, loading, error }: AnalysisDisplayProps) => {
         </div>
         <div className="mb-2">
           <span className="font-semibold">Analysis:</span>
-          <div className="mt-2 prose max-w-none">
+          <div className="mt-2 prose prose-sm max-w-none bg-gray-50 p-4 rounded font-mono text-sm">
             {formatContent(data.Content)}
           </div>
         </div>
