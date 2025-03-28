@@ -1,15 +1,15 @@
 # PipelineIQ
 
-A Go and TypeScript application that fetches data from public APIs, processes it, and uses an LLM to generate insights.
+A modern Go and TypeScript full-stack application that fetches data from public APIs, processes it, and leverages LLM technology to generate valuable insights.
 
 ## Project Overview
 
-PipelineIQ is a full-stack application that demonstrates a complete data pipeline:
+PipelineIQ is a comprehensive full-stack application that demonstrates a complete data pipeline:
 
-1. **Data Ingestion**: Concurrently fetches data from multiple external APIs
-2. **Data Processing**: Combines and transforms the raw data into meaningful insights
-3. **LLM Analysis**: Uses OpenAI's GPT models to generate human-readable analysis
-4. **Interactive Dashboard**: Displays the processed data and insights in a React frontend
+1. **Data Ingestion**: Concurrently fetches data from multiple external APIs using Go's powerful concurrency model
+2. **Data Processing**: Combines and transforms the raw data into meaningful insights with efficient processing algorithms
+3. **LLM Analysis**: Uses advanced language models to generate human-readable analysis and extract key insights
+4. **Interactive Dashboard**: Displays the processed data and insights in a modern React frontend with streaming capabilities
 
 ## Project Structure
 
@@ -37,9 +37,10 @@ PipelineIQ/
 ## Prerequisites
 
 - Docker and Docker Compose (for containerized deployment)
-- Go 1.16 or higher (for local development)
-- Node.js and npm/yarn (for local frontend development)
+- Go 1.23 or higher (for local development)
+- Node.js 18+ and npm/yarn (for local frontend development)
 - PostgreSQL database (or use the containerized version)
+- OpenAI API key for LLM functionality
 
 ## Environment Variables
 
@@ -53,6 +54,7 @@ Required environment variables:
 - `DATABASE_URL`: PostgreSQL connection string
 - `OPENAI_API_KEY`: API key for OpenAI (required for LLM analysis)
 - `API_URL_1` and `API_URL_2`: URLs for the two data sources
+- `WEATHER_API_KEY`: API key for weather data (if applicable)
 - `PORT`: HTTP server port (defaults to 8080)
 
 ## Deployment with Docker
@@ -73,7 +75,55 @@ The application will be available at http://localhost
 
 ## Development
 
-### Backend Development
+### Development with Make
+
+PipelineIQ includes a comprehensive Makefile with commands for both backend and frontend development:
+
+```bash
+# Build the backend
+make build
+
+# Run the backend
+make run
+
+# Build the frontend
+make frontend-build
+
+# Run frontend dev server
+make frontend-dev
+
+# Install frontend dependencies
+make frontend-deps
+
+# Run backend tests
+make test
+
+# Build both frontend and backend
+make build-all
+
+# Start both backend and frontend for development
+make dev
+
+# Stop development environment
+make dev-stop
+
+# Start Docker containers
+make docker-up
+
+# Stop Docker containers
+make docker-down
+
+# Lint code (backend and frontend)
+make lint
+
+# Update dependencies and rebuild everything
+make update
+
+# Clean build artifacts
+make clean
+```
+
+### Manual Backend Development
 
 ```bash
 # Run the backend locally
@@ -86,7 +136,7 @@ go test ./...
 go build -o pipelineiq ./cmd/app
 ```
 
-### Frontend Development
+### Manual Frontend Development
 
 ```bash
 # Install dependencies
@@ -117,14 +167,20 @@ npm run build
   - Optional query parameter: `id` (specific analysis ID)
   - Response: `{ "analysis": {...}, "generated_at": "2023-01-01T12:00:00Z" }`
 
+- `GET /stream_analysis`: Stream LLM-generated insights (Server-Sent Events)
+  - Optional query parameter: `processed_id` (specific processed data ID)
+  - Response: Streaming events with types: start, content, error, complete
+
 ## Design Decisions
 
 - **Concurrent Data Fetching**: Used Go's goroutines and channels for efficient parallel data retrieval
 - **GORM ORM**: Simplified database operations with automatic migrations
 - **Gin Web Framework**: Lightweight, high-performance HTTP router
 - **React + TypeScript**: Type-safe frontend development with component-based architecture
+- **Tailwind CSS**: Utility-first CSS framework for responsive design
 - **Docker Multi-stage Builds**: Optimized container images for both frontend and backend
 - **Nginx Reverse Proxy**: Unified frontend serving and API routing
+- **Streaming API**: Real-time data streaming for immediate analysis feedback
 
 ## License
 
