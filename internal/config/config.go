@@ -11,7 +11,7 @@ type Config struct {
 	OpenAIAPIKey   string
 	WeatherAPIKey  string
 	Port           int
-	APIURL1        string
+	CryptoAPIURL   string
 	APIURL2        string
 }
 
@@ -24,7 +24,7 @@ func Load() *Config {
 		OpenAIAPIKey:   getEnvOrDefault("OPENAI_API_KEY", ""),
 		WeatherAPIKey:  getEnvOrDefault("WEATHER_API_KEY", ""),
 		Port:           port,
-		APIURL1:        getEnvOrDefault("API_URL_1", ""),
+		CryptoAPIURL:   getEnvOrDefault("CRYPTO_API_URL", ""),
 		APIURL2:        getEnvOrDefault("API_URL_2", ""),
 	}
 }

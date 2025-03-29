@@ -22,7 +22,7 @@ type DataIngestionService struct {
 
 // Config contains the required configuration for the ingestion service
 type Config struct {
-	APIURL1        string
+	CryptoAPIURL   string
 	APIURL2        string
 	WeatherAPIKey  string
 }
@@ -53,12 +53,12 @@ func (s *DataIngestionService) FetchData() error {
 	// Create a channel to collect results
 	resultCh := make(chan FetchResult, 2) // Buffer for 2 API sources
 
-	// Source 1
+	// Source 1 - Cryptocurrency API
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		content, err := s.fetchFromAPI(s.Config.APIURL1)
-		resultCh <- FetchResult{SourceName: "API1", Content: content, Error: err}
+		content, err := s.fetchFromAPI(s.Config.CryptoAPIURL)
+		resultCh <- FetchResult{SourceName: "CryptoAPI", Content: content, Error: err}
 	}()
 
 	// Source 2 - Weather API

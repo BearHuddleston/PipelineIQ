@@ -24,7 +24,7 @@ func SetupRouter(db *gorm.DB, logger *zap.SugaredLogger, cfg *config.Config) *gi
 
 	// Initialize services
 	ingestionSvc := services.NewDataIngestionService(db, logger, &services.Config{
-		APIURL1:       cfg.APIURL1,
+		CryptoAPIURL:  cfg.CryptoAPIURL,
 		APIURL2:       cfg.APIURL2,
 		WeatherAPIKey: cfg.WeatherAPIKey,
 	})
