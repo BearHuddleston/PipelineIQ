@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { streamAnalysis, streamAnalysisOpenAI } from '../services/api';
+import { streamAnalysisOpenAI } from '../services/api';
 import { StreamingAnalysisProps } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = true }: StreamingAnalysisProps) => {
+const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysisProps) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [content, setContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +49,8 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = t
       }
     };
     
-    // Choose streaming implementation based on prop
-    let cleanup;
-    if (useOpenAIFormat) {
-      cleanup = streamAnalysisOpenAI(processedId, callbacks);
-    } else {
-      cleanup = streamAnalysis(callbacks, processedId);
-    }
+    // Always use OpenAI format
+    const cleanup = streamAnalysisOpenAI(processedId, callbacks);
     
     // Store the cleanup function
     cleanupRef.current = cleanup;
@@ -92,7 +87,7 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = t
     <div className="mt-6">
       <div className="card">
         <div className="card-header">
-          <h2>LLM Analysis {useOpenAIFormat ? "(OpenAI Format)" : ""}</h2>
+          <h2>LLM Analysis</h2>
           <div className="flex items-center">
             {isStreaming && startTime && (
               <div className="text-sm text-gray-500 mr-4">

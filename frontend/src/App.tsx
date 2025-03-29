@@ -13,7 +13,6 @@ function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [lastProcessedId, setLastProcessedId] = useState<number | undefined>(undefined);
   const [dateFilter, setDateFilter] = useState<string>('');
-  const [useOpenAIFormat, setUseOpenAIFormat] = useState<boolean>(true);
 
   // Check server health periodically
   useEffect(() => {
@@ -48,9 +47,7 @@ function App() {
     setLastProcessedId(processedId);
   };
 
-  const toggleStreamingFormat = () => {
-    setUseOpenAIFormat(prev => !prev);
-  };
+  // No toggle needed as OpenAI format is now the default
 
   return (
     <div className="app-container">
@@ -63,12 +60,6 @@ function App() {
             <h1 className="text-3xl font-bold">PipelineIQ</h1>
           </div>
           <div className="flex items-center">
-            <button 
-              onClick={toggleStreamingFormat}
-              className="mr-4 text-sm btn btn-outline btn-sm"
-            >
-              {useOpenAIFormat ? "Using OpenAI Format" : "Using Standard Format"} 
-            </button>
             <div className={`status-indicator status-${serverStatus}`}>
               <div className="status-dot"></div>
               <span className="capitalize">{serverStatus}</span>
@@ -120,7 +111,6 @@ function App() {
                 <StreamingAnalysisDisplay 
                   processedId={lastProcessedId}
                   onComplete={() => {/* Don't trigger refresh here to avoid infinite loops */}} 
-                  useOpenAIFormat={useOpenAIFormat}
                 />
               </div>
             </div>

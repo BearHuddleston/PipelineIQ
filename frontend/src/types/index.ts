@@ -76,5 +76,4 @@ export interface StreamingEventCallbacks {
 export interface StreamingAnalysisProps {
   processedId?: number;
   onComplete?: (analysisId: number) => void;
-  useOpenAIFormat?: boolean;
 }
