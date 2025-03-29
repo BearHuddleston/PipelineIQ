@@ -73,11 +73,14 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
   );
 };
 
-export const ResultsContainer = () => {
+export interface ResultsContainerProps {
+  dateFilter?: string;
+}
+
+export const ResultsContainer = ({ dateFilter }: ResultsContainerProps) => {
   const [data, setData] = useState<ProcessedData[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState('');
 
   const fetchResults = async (date?: string) => {
     setLoading(true);
@@ -94,63 +97,18 @@ export const ResultsContainer = () => {
     }
   };
 
+  // Initial fetch on mount
   useEffect(() => {
     fetchResults();
   }, []);
 
-  const handleFilterSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // Fetch when date filter changes
+  useEffect(() => {
     fetchResults(dateFilter);
-  };
+  }, [dateFilter]);
 
   return (
-    <div className="mt-8">
-      <div className="mb-4">
-        <form onSubmit={handleFilterSubmit} className="flex items-end space-x-2">
-          <div className="form-group">
-            <label htmlFor="date-filter" className="block text-sm font-medium text-gray-700 mb-1">
-              Filter by Date
-            </label>
-            <div className="flex">
-              <input
-                type="text"
-                id="date-filter"
-                placeholder="YYYY-MM-DD"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="form-control"
-                pattern="\d{4}-\d{2}-\d{2}"
-              />
-              <button
-                type="submit"
-                className="btn btn-primary ml-2"
-                disabled={loading}
-              >
-                {loading ? <LoadingSpinner size="small" showText={false} /> : 
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                }
-              </button>
-              {dateFilter && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDateFilter('');
-                    fetchResults();
-                  }}
-                  className="btn btn-secondary ml-2"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          </div>
-        </form>
-      </div>
-
+    <div className="mt-4">
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <LoadingSpinner size="large" />

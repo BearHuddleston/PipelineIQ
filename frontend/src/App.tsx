@@ -4,12 +4,14 @@ import DataFetchForm from './components/DataFetchForm';
 import { ResultsContainer } from './components/ResultsDisplay';
 // import { AnalysisContainer } from './components/AnalysisDisplay';
 import StreamingAnalysisDisplay from './components/StreamingAnalysisDisplay';
+import DateFilterForm from './components/DateFilterForm';
 import { checkHealth } from './services/api';
 
 function App() {
   const [serverStatus, setServerStatus] = useState<'connecting' | 'online' | 'offline' | 'checking'>('connecting');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [lastProcessedId, setLastProcessedId] = useState<number | undefined>(undefined);
+  const [dateFilter, setDateFilter] = useState<string>('');
 
   // Check server health periodically
   useEffect(() => {
@@ -82,9 +84,16 @@ function App() {
         ) : (
           <>
             <DataFetchForm onSuccess={handleDataProcessSuccess} />
+            <DateFilterForm 
+              onFilterChange={(date) => setDateFilter(date)}
+              loading={false}
+            />
             <div className="grid-container">
               <div>
-                <ResultsContainer key={`results-${refreshTrigger}`} />
+                <ResultsContainer 
+                  key={`results-${refreshTrigger}`} 
+                  dateFilter={dateFilter}
+                />
               </div>
               <div>
                 <StreamingAnalysisDisplay 
