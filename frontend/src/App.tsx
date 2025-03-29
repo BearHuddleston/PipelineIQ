@@ -5,6 +5,7 @@ import { ResultsContainer } from './components/ResultsDisplay';
 // import { AnalysisContainer } from './components/AnalysisDisplay';
 import StreamingAnalysisDisplay from './components/StreamingAnalysisDisplay';
 import DateFilterForm from './components/DateFilterForm';
+import InfoCard from './components/InfoCard';
 import { checkHealth } from './services/api';
 
 function App() {
@@ -96,11 +97,18 @@ function App() {
           </div>
         ) : (
           <>
-            <DataFetchForm onSuccess={handleDataProcessSuccess} />
-            <DateFilterForm 
-              onFilterChange={(date) => setDateFilter(date)}
-              loading={false}
-            />
+            <div className="flex flex-col md:flex-row md:gap-4">
+              <div className="flex-1">
+                <DataFetchForm onSuccess={handleDataProcessSuccess} />
+                <DateFilterForm 
+                  onFilterChange={(date) => setDateFilter(date)}
+                  loading={false}
+                />
+              </div>
+              <div className="flex-1 mt-4 md:mt-0">
+                <InfoCard />
+              </div>
+            </div>
             <div className="grid-container">
               <div>
                 <ResultsContainer 
