@@ -111,5 +111,5 @@ dev-stop:
 	@if [ -f backend.pid ]; then kill $$(cat backend.pid) && rm backend.pid || true; fi
 
 # Full application update and rebuild
-update: deps frontend-deps build-all
+update: deps frontend-deps build-all docker-up
 	@echo "Application fully updated and rebuilt"
