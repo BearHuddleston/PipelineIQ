@@ -28,13 +28,58 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
     }));
   };
 
+  // Function to syntax highlight JSON
+  const JsonDisplay = ({ json }: { json: any }) => {
+    const formattedJson = JSON.stringify(json, null, 2);
+    
+    // Basic syntax highlighting for JSON
+    const highlightedJson = formattedJson.replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      (match) => {
+        let cls = 'text-purple-600'; // default: numbers
+        if (/^"/.test(match)) {
+          if (/:$/.test(match)) {
+            cls = 'text-blue-600'; // keys
+          } else {
+            cls = 'text-green-600'; // strings
+          }
+        } else if (/true|false/.test(match)) {
+          cls = 'text-orange-600'; // booleans
+        } else if (/null/.test(match)) {
+          cls = 'text-red-600'; // null
+        }
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
+    
+    return (
+      <pre className="text-sm whitespace-pre-wrap overflow-auto bg-gray-50 p-3 rounded">
+        <div dangerouslySetInnerHTML={{ __html: highlightedJson }} />
+      </pre>
+    );
+  };
+
+  // Function to render metadata fields
+  const renderMetaData = (item: ProcessedData) => {
+    return (
+      <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mt-2 mb-3 border-t border-b border-gray-100 py-2">
+        <div><span className="font-semibold">ID:</span> {item.ID}</div>
+        <div><span className="font-semibold">Created:</span> {new Date(item.CreatedAt).toLocaleString()}</div>
+        <div><span className="font-semibold">Updated:</span> {new Date(item.UpdatedAt).toLocaleString()}</div>
+        <div><span className="font-semibold">Processed:</span> {new Date(item.ProcessedAt).toLocaleString()}</div>
+      </div>
+    );
+  };
+
   return (
     <div className="mt-6">
       <div className="card">
         <div className="card-header">
           <h2>Processed Results</h2>
-          <div className="text-sm text-gray-500">
-            {data.length} {data.length === 1 ? 'result' : 'results'} available
+          <div className="flex items-center">
+            <div className="text-sm text-gray-500">
+              {data.length} {data.length === 1 ? 'result' : 'results'} available
+            </div>
           </div>
         </div>
         <div className="data-panel border-0 rounded-t-none">
@@ -78,8 +123,9 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
                   </div>
                   
                   {isExpanded && (
-                    <div className="code-block mt-3 max-h-[400px] transition-all duration-300 ease-in-out overflow-auto">
-                      {JSON.stringify(parsedContent, null, 2)}
+                    <div className="json-viewer mt-3 max-h-[600px] transition-all duration-300 ease-in-out overflow-auto">
+                      {renderMetaData(item)}
+                      <JsonDisplay json={parsedContent} />
                     </div>
                   )}
                 </div>
