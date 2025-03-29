@@ -11,6 +11,7 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = t
   const [content, setContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<Date | null>(null);
+  const [hasAttemptedAnalysis, setHasAttemptedAnalysis] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const lastProcessedIdRef = useRef<number | undefined>(undefined);
@@ -21,6 +22,7 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = t
     setError(null);
     setIsStreaming(true);
     setStartTime(new Date());
+    setHasAttemptedAnalysis(true);
     
     const callbacks = {
       onStart: (message: string) => {
@@ -63,6 +65,7 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = t
   useEffect(() => {
     if (processedId && processedId !== lastProcessedIdRef.current && !isStreaming) {
       lastProcessedIdRef.current = processedId;
+      setHasAttemptedAnalysis(true);
       // Start streaming with a slight delay to ensure backend processing has begun
       setTimeout(() => {
         startStreaming();
@@ -142,7 +145,16 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = t
                   {content}
                 </ReactMarkdown>
               </div>
+            ) : isStreaming ? (
+              // Empty div when streaming but no content yet
+              <div></div>
+            ) : hasAttemptedAnalysis || processedId ? (
+              // Show empty space or pending message when waiting for analysis but no content yet
+              <div className="flex justify-center items-center h-24 text-gray-400 italic">
+                Waiting for data...
+              </div>
             ) : (
+              // Show instructions only when nothing has happened yet
               <div className="text-gray-400 italic">
                 Click "Generate Analysis" to create an analysis of the processed data, or "Fetch & Process Data" to trigger automatic analysis.
               </div>
