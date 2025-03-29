@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { streamAnalysis } from '../services/api';
+import { streamAnalysis, streamAnalysisOpenAI } from '../services/api';
 import { StreamingAnalysisProps } from '../types';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysisProps) => {
+const StreamingAnalysisDisplay = ({ processedId, onComplete, useOpenAIFormat = true }: StreamingAnalysisProps) => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [content, setContent] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -22,12 +22,11 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
     setIsStreaming(true);
     setStartTime(new Date());
     
-    // Start streaming
-    const cleanup = streamAnalysis({
-      onStart: (message) => {
+    const callbacks = {
+      onStart: (message: string) => {
         console.log('Streaming started:', message);
       },
-      onContent: (chunk) => {
+      onContent: (chunk: string) => {
         setContent((prev) => prev + chunk);
         
         // Auto-scroll to the bottom
@@ -35,18 +34,26 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
           containerRef.current.scrollTop = containerRef.current.scrollHeight;
         }
       },
-      onError: (errorMsg) => {
+      onError: (errorMsg: string) => {
         setError(errorMsg);
         setIsStreaming(false);
       },
-      onComplete: (data) => {
+      onComplete: (data: { id: number; message: string }) => {
         console.log('Streaming completed:', data);
         setIsStreaming(false);
         if (onComplete) {
           onComplete(data.id);
         }
       }
-    }, processedId);
+    };
+    
+    // Choose streaming implementation based on prop
+    let cleanup;
+    if (useOpenAIFormat) {
+      cleanup = streamAnalysisOpenAI(processedId, callbacks);
+    } else {
+      cleanup = streamAnalysis(callbacks, processedId);
+    }
     
     // Store the cleanup function
     cleanupRef.current = cleanup;
@@ -72,18 +79,22 @@ const StreamingAnalysisDisplay = ({ processedId, onComplete }: StreamingAnalysis
     };
   }, []);
 
-  // Now using ReactMarkdown for rendering instead of custom formatting
+  // Calculate elapsed time for streaming timer
+  const getElapsedTime = () => {
+    if (!startTime) return 0;
+    return Math.floor((new Date().getTime() - startTime.getTime()) / 1000);
+  };
 
   return (
     <div className="mt-6">
       <div className="card">
         <div className="card-header">
-          <h2>LLM Analysis</h2>
+          <h2>LLM Analysis {useOpenAIFormat ? "(OpenAI Format)" : ""}</h2>
           <div className="flex items-center">
             {isStreaming && startTime && (
               <div className="text-sm text-gray-500 mr-4">
                 <span className="inline-block w-2 h-2 bg-blue-500 rounded-full animate-pulse mr-1"></span>
-                Streaming for {Math.floor((new Date().getTime() - startTime.getTime()) / 1000)}s
+                Streaming for {getElapsedTime()}s
               </div>
             )}
             <button

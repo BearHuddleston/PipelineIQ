@@ -32,6 +32,7 @@ export const checkHealth = async (): Promise<{ status: string; message: string }
   return response.data;
 };
 
+// Legacy EventSource based streaming implementation
 export const streamAnalysis = (
   callbacks: StreamingEventCallbacks,
   processedId?: number
@@ -76,6 +77,83 @@ export const streamAnalysis = (
     // Close the connection when complete
     eventSource.close();
   });
+  
+  // Return a function to close the connection
+  return () => {
+    eventSource.close();
+  };
+};
+
+// New OpenAI-style streaming implementation
+export const streamAnalysisOpenAI = (
+  processedId?: number,
+  callbacks?: StreamingEventCallbacks
+): () => void => {
+  // Create the fetch URL
+  const url = new URL(`${API_BASE_URL}/stream_analysis_openai`, window.location.origin);
+  
+  // Add processed_id query parameter if provided
+  if (processedId) {
+    url.searchParams.append('processed_id', processedId.toString());
+  }
+  
+  // Notify start if callback provided
+  if (callbacks?.onStart) {
+    callbacks.onStart('Starting analysis stream');
+  }
+  
+  // Create the EventSource for simplicity
+  const eventSource = new EventSource(url.toString());
+  
+  let content = '';
+  
+  // Set up event listeners
+  eventSource.onmessage = (event: MessageEvent) => {
+    try {
+      // Handle [DONE] message
+      if (event.data === '[DONE]') {
+        if (callbacks?.onComplete) {
+          callbacks.onComplete({ 
+            id: processedId || 0, 
+            message: 'Stream completed' 
+          });
+        }
+        eventSource.close();
+        return;
+      }
+      
+      // Try to parse the JSON data
+      const parsedData = JSON.parse(event.data);
+      
+      // Handle error message
+      if (parsedData.error) {
+        if (callbacks?.onError) {
+          callbacks.onError(parsedData.error.message || 'An error occurred');
+        }
+        eventSource.close();
+        return;
+      }
+      
+      // Handle content delta
+      if (parsedData.choices && parsedData.choices[0]?.delta?.content) {
+        const delta = parsedData.choices[0].delta.content;
+        content += delta;
+        
+        if (callbacks?.onContent) {
+          callbacks.onContent(delta);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing SSE message:', error, event.data);
+    }
+  };
+  
+  eventSource.onerror = () => {
+    if (callbacks?.onError) {
+      callbacks.onError('Connection error occurred');
+    }
+    eventSource.close();
+  };
   
   // Return a function to close the connection
   return () => {

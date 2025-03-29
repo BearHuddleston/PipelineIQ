@@ -396,3 +396,259 @@ IMPORTANT: Format your response using Markdown with proper headings, lists, and 
 	// Wait for completion
 	<-done
 }
+
+// StreamLLMAnalysisOpenAI generates LLM insights and streams the results in OpenAI API format
+func (s *LLMService) StreamLLMAnalysisOpenAI(w http.ResponseWriter, processedDataID uint) {
+	if s.OpenAIAPIKey == "" {
+		http.Error(w, "OpenAI API key is not set", http.StatusInternalServerError)
+		return
+	}
+
+	s.Logger.Info("Starting OpenAI format streaming LLM analysis generation")
+
+	// Set headers for streaming
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// Create a channel to signal completion
+	done := make(chan bool)
+
+	// Start streaming in a goroutine
+	go func() {
+		defer close(done)
+
+		// Retrieve the processed data by ID or latest
+		var processedData models.ProcessedData
+		var err error
+
+		if processedDataID > 0 {
+			err = s.DB.First(&processedData, processedDataID).Error
+		} else {
+			err = s.DB.Order("processed_at desc").First(&processedData).Error
+		}
+
+		if err != nil {
+			errJson, _ := json.Marshal(map[string]interface{}{
+				"error": map[string]string{
+					"message": fmt.Sprintf("Failed to retrieve processed data: %v", err),
+					"type":    "internal_error",
+				},
+			})
+			fmt.Fprintf(w, "data: %s\n\n", errJson)
+			w.(http.Flusher).Flush()
+			return
+		}
+
+		// Prepare the prompt for the LLM with Markdown formatting guidance
+		prompt := fmt.Sprintf(`Analyze the following JSON data and provide insights:
+
+%s
+
+The data structure includes:
+- timestamp: When the data was processed
+- combined_metrics: All metrics from different data sources with source name as prefix
+- derived_metrics: Calculated metrics based on combined data
+- data_sources: List of data sources
+
+Please provide a detailed analysis with the following sections, using Markdown formatting:
+
+## Summary of Key Metrics
+Summarize the key metrics from each data source with bullet points or paragraphs.
+
+## Trends and Patterns
+Analyze any notable trends or patterns in the data.
+
+## Recommendations
+Provide actionable recommendations based on the data analysis.
+
+IMPORTANT: Format your response using Markdown with proper headings, lists, and emphasis to highlight important points. Use tables if appropriate for data comparison.
+`, processedData.Content)
+
+		// Stream from OpenAI API
+		url := "https://api.openai.com/v1/chat/completions"
+
+		// Prepare the streaming request
+		request := ChatCompletionRequest{
+			Model: "gpt-4", // Use an appropriate model
+			Messages: []Message{
+				{
+					Role:    "system",
+					Content: "You are a data analyst that provides insightful analysis of metrics and trends.",
+				},
+				{
+					Role:    "user",
+					Content: prompt,
+				},
+			},
+			Stream: true,
+		}
+
+		// Convert request to JSON
+		payload, err := json.Marshal(request)
+		if err != nil {
+			errJson, _ := json.Marshal(map[string]interface{}{
+				"error": map[string]string{
+					"message": fmt.Sprintf("Failed to serialize request: %v", err),
+					"type":    "internal_error",
+				},
+			})
+			fmt.Fprintf(w, "data: %s\n\n", errJson)
+			w.(http.Flusher).Flush()
+			return
+		}
+
+		// Create the HTTP request
+		req, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+		if err != nil {
+			errJson, _ := json.Marshal(map[string]interface{}{
+				"error": map[string]string{
+					"message": fmt.Sprintf("Failed to create HTTP request: %v", err),
+					"type":    "internal_error",
+				},
+			})
+			fmt.Fprintf(w, "data: %s\n\n", errJson)
+			w.(http.Flusher).Flush()
+			return
+		}
+
+		// Set headers
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.OpenAIAPIKey))
+		req.Header.Set("Accept", "text/event-stream")
+
+		// Make the request
+		client := &http.Client{Timeout: 120 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			errJson, _ := json.Marshal(map[string]interface{}{
+				"error": map[string]string{
+					"message": fmt.Sprintf("OpenAI API request failed: %v", err),
+					"type":    "api_error",
+				},
+			})
+			fmt.Fprintf(w, "data: %s\n\n", errJson)
+			w.(http.Flusher).Flush()
+			return
+		}
+		defer resp.Body.Close()
+
+		// Check for non-200 response
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			errJson, _ := json.Marshal(map[string]interface{}{
+				"error": map[string]string{
+					"message": fmt.Sprintf("API returned error: status=%d, body=%s", resp.StatusCode, string(body)),
+					"type":    "api_error",
+				},
+			})
+			fmt.Fprintf(w, "data: %s\n\n", errJson)
+			w.(http.Flusher).Flush()
+			return
+		}
+
+		// Accumulate the full content for storing in the database
+		var fullContent strings.Builder
+
+		// Read the streaming response
+		reader := bufio.NewReader(resp.Body)
+		for {
+			line, err := reader.ReadBytes('\n')
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				s.Logger.Errorw("Error reading stream", "error", err)
+				errJson, _ := json.Marshal(map[string]interface{}{
+					"error": map[string]string{
+						"message": fmt.Sprintf("Error reading stream: %v", err),
+						"type":    "stream_error",
+					},
+				})
+				fmt.Fprintf(w, "data: %s\n\n", errJson)
+				w.(http.Flusher).Flush()
+				return
+			}
+
+			line = bytes.TrimSpace(line)
+			if len(line) == 0 {
+				continue
+			}
+
+			// SSE format: "data: {JSON data}"
+			if !bytes.HasPrefix(line, []byte("data: ")) {
+				continue
+			}
+
+			// Extract JSON data
+			data := line[6:] // Skip "data: "
+
+			// Check for stream end
+			if string(data) == "[DONE]" {
+				fmt.Fprintf(w, "data: [DONE]\n\n")
+				w.(http.Flusher).Flush()
+				break
+			}
+
+			// Parse the chunk
+			var chunk ChatCompletionChunk
+			if err := json.Unmarshal(data, &chunk); err != nil {
+				s.Logger.Errorw("Failed to parse chunk", "error", err, "data", string(data))
+				continue
+			}
+
+			if len(chunk.Choices) == 0 {
+				continue
+			}
+
+			content := chunk.Choices[0].Delta.Content
+			if content != "" {
+				fullContent.WriteString(content)
+				
+				// Create OpenAI-compatible delta format
+				deltaJson, _ := json.Marshal(map[string]interface{}{
+					"id":      chunk.ID,
+					"object":  "chat.completion.chunk",
+					"created": time.Now().Unix(),
+					"model":   "gpt-4",
+					"choices": []map[string]interface{}{
+						{
+							"index": 0,
+							"delta": map[string]string{
+								"content": content,
+							},
+							"finish_reason": nil,
+						},
+					},
+				})
+				
+				fmt.Fprintf(w, "data: %s\n\n", deltaJson)
+				w.(http.Flusher).Flush()
+			}
+		}
+
+		// Store the full content in the database
+		llmAnalysis := models.LLMAnalysis{
+			Content:     fullContent.String(),
+			GeneratedAt: time.Now(),
+		}
+
+		if err := s.DB.Create(&llmAnalysis).Error; err != nil {
+			s.Logger.Errorw("Failed to store LLM analysis", "error", err)
+			errJson, _ := json.Marshal(map[string]interface{}{
+				"error": map[string]string{
+					"message": fmt.Sprintf("Failed to store analysis: %v", err),
+					"type":    "db_error",
+				},
+			})
+			fmt.Fprintf(w, "data: %s\n\n", errJson)
+			w.(http.Flusher).Flush()
+		}
+
+		s.Logger.Infow("OpenAI format streaming LLM analysis completed", "id", llmAnalysis.ID)
+	}()
+
+	// Wait for completion
+	<-done
+}
