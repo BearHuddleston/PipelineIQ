@@ -5,6 +5,9 @@ import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 
 const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
+  // Track which items are expanded
+  const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>({});
+  
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -16,6 +19,14 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
   if (!data) {
     return <LoadingSpinner />;
   }
+
+  // Toggle expansion state of an item
+  const toggleExpand = (id: number) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   return (
     <div className="mt-6">
@@ -36,23 +47,41 @@ const ResultsDisplay = ({ data, loading, error }: ResultsDisplayProps) => {
               parsedContent = { error: 'Invalid JSON', raw: item.Content };
             }
 
+            const isExpanded = !!expandedItems[item.ID];
+
             return (
               <div key={item.ID} className="border-b border-gray-100 last:border-b-0">
                 <div className="p-4 bg-white">
-                  <div className="flex justify-between items-center mb-2">
+                  <div 
+                    className="flex justify-between items-center cursor-pointer" 
+                    onClick={() => toggleExpand(item.ID)}
+                  >
                     <div className="font-medium flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className={`h-4 w-4 mr-1 text-blue-500 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path d="M6 6L14 10L6 14V6Z" />
                       </svg>
                       Result #{item.ID}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(item.ProcessedAt).toLocaleString()}
+                    <div className="flex items-center">
+                      <div className="text-xs text-gray-500 mr-2">
+                        {new Date(item.ProcessedAt).toLocaleString()}
+                      </div>
+                      <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
+                        {isExpanded ? 'Hide' : 'Show'}
+                      </span>
                     </div>
                   </div>
-                  <div className="code-block mt-2 max-h-[400px]">
-                    {JSON.stringify(parsedContent, null, 2)}
-                  </div>
+                  
+                  {isExpanded && (
+                    <div className="code-block mt-3 max-h-[400px] transition-all duration-300 ease-in-out overflow-auto">
+                      {JSON.stringify(parsedContent, null, 2)}
+                    </div>
+                  )}
                 </div>
               </div>
             );
