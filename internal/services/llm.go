@@ -33,9 +33,9 @@ func NewLLMService(db *gorm.DB, logger *zap.SugaredLogger, apiKey string) *LLMSe
 
 // OpenAI ChatCompletion request structure
 type ChatCompletionRequest struct {
-	Model     string    `json:"model"`
-	Messages  []Message `json:"messages"`
-	Stream    bool      `json:"stream,omitempty"`
+	Model    string    `json:"model"`
+	Messages []Message `json:"messages"`
+	Stream   bool      `json:"stream,omitempty"`
 }
 
 // Message for OpenAI ChatCompletion
@@ -65,7 +65,7 @@ type ChatCompletionChunk struct {
 	Created int64  `json:"created"`
 	Model   string `json:"model"`
 	Choices []struct {
-		Index int     `json:"index"`
+		Index int `json:"index"`
 		Delta struct {
 			Content string `json:"content,omitempty"`
 		} `json:"delta"`
@@ -220,17 +220,17 @@ func (s *LLMService) StreamLLMAnalysis(w http.ResponseWriter, processedDataID ui
 	// Start streaming in a goroutine
 	go func() {
 		defer close(done)
-		
+
 		// Retrieve the processed data by ID or latest
 		var processedData models.ProcessedData
 		var err error
-		
+
 		if processedDataID > 0 {
 			err = s.DB.First(&processedData, processedDataID).Error
 		} else {
 			err = s.DB.Order("processed_at desc").First(&processedData).Error
 		}
-		
+
 		if err != nil {
 			errMsg := fmt.Sprintf("failed to retrieve processed data: %v", err)
 			s.Logger.Error(errMsg)
@@ -352,7 +352,7 @@ IMPORTANT: Format your response using Markdown with proper headings, lists, and 
 
 			// Extract JSON data
 			data := line[6:] // Skip "data: "
-			
+
 			// Check for stream end
 			if string(data) == "[DONE]" {
 				break
